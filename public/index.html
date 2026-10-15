@@ -342,34 +342,34 @@
   </div>
 
   <script>
-    const dbg = document.getElementById('debug');
+    var dbg = document.getElementById('debug');
     function log(msg) { dbg.innerHTML = dbg.innerHTML.replace('LOADING...','') + msg + '<br>'; }
 
     try {
-    const canvas = document.getElementById('wheel');
-    log('canvas el: ' + (canvas ? 'ok' : 'MISSING'));
-    const ctx = canvas.getContext('2d');
+    var canvas = document.getElementById('wheel');
+    log('canvas: ' + (canvas ? 'ok' : 'MISSING'));
+    var ctx = canvas.getContext('2d');
     log('ctx: ' + (ctx ? 'ok' : 'FAILED'));
-    const RADIUS = 240;
-    const CX = canvas.width / 2;
-    const CY = canvas.height / 2;
+    var RADIUS = 240;
+    var CX = canvas.width / 2;
+    var CY = canvas.height / 2;
 
-    const COLORS = [
+    var COLORS = [
       '#8b0000', '#4a0066', '#1a5200', '#004444',
       '#880033', '#5c3a00', '#003388', '#550000',
       '#330055', '#005500'
     ];
 
-    const ACCENT = '#ff6b00';
-
-    let movies = [];
-    let currentAngle = 0;
-    let isSpinning = false;
-    let spinVelocity = 0;
-    let animFrame = null;
-    let idleFrame = null;
-
-    const IDLE_SPEED = 0.0008; // radians per frame — slow creep
+    var ACCENT = '#ff6b00';
+    var movies = [];
+    var currentAngle = 0;
+    var isSpinning = false;
+    var spinVelocity = 0;
+    var animFrame = null;
+    var idleFrame = null;
+    var IDLE_SPEED = 0.0008;
+    var wsConnected = false;
+    var lastMovieCount = -1;
 
     function startIdleSpin() {
       if (idleFrame) return;
@@ -390,28 +390,25 @@
       }
     }
 
-    // WebSocket with polling fallback
-    let wsConnected = false;
-
     function connectWS() {
       log('connecting WS...');
-      const ws = new WebSocket(`wss://${location.host}`);
-      ws.onopen = () => { wsConnected = true; log('WS open'); };
-      ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        log('WS msg: ' + data.type + ' movies:' + (data.movies||[]).length);
+      var ws = new WebSocket('wss://' + location.host);
+      ws.onopen = function() { wsConnected = true; log('WS open'); };
+      ws.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        log('WS msg: ' + data.type + ' n:' + (data.movies || []).length);
         if (data.type === 'movies') {
           movies = data.movies;
           updateMovieList();
           if (!isSpinning) drawWheel();
         }
       };
-      ws.onclose = () => {
+      ws.onclose = function() {
         wsConnected = false;
         log('WS closed, retrying...');
         setTimeout(connectWS, 3000);
       };
-      ws.onerror = () => {
+      ws.onerror = function() {
         wsConnected = false;
         log('WS error');
       };
@@ -419,40 +416,48 @@
 
     connectWS();
 
-    // Polling fallback — kicks in if WS never connects
-    let lastMovieCount = -1;
-    setInterval(async () => {
-      try {
-        const res = await fetch('/api/movies');
-        const data = await res.json();
-        if (data.length !== lastMovieCount) {
-          lastMovieCount = data.length;
-          log('poll: ' + data.length + ' movies');
-          movies = data;
-          updateMovieList();
-          if (!isSpinning) drawWheel();
+    setInterval(function() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/api/movies', true);
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          try {
+            var data = JSON.parse(xhr.responseText);
+            if (data.length !== lastMovieCount) {
+              lastMovieCount = data.length;
+              log('poll: ' + data.length + ' movies');
+              movies = data;
+              updateMovieList();
+              if (!isSpinning) drawWheel();
+            }
+          } catch(e) { log('poll parse err: ' + e); }
         }
-      } catch(e) { log('poll err: ' + e); }
+      };
+      xhr.onerror = function() { log('poll xhr err'); };
+      xhr.send();
     }, 2000);
 
     function updateMovieList() {
-      const ul = document.getElementById('movieList');
-      const count = document.getElementById('movieCount');
+      var ul = document.getElementById('movieList');
+      var count = document.getElementById('movieCount');
       if (movies.length === 0) {
         ul.innerHTML = '<li class="empty-msg">Waiting for submissions...</li>';
         count.textContent = '';
       } else {
-        ul.innerHTML = movies.map((m, i) => `<li>> ${m}</li>`).join('');
-        count.textContent = `${movies.length} / 10 movies`;
+        var html = '';
+        for (var i = 0; i < movies.length; i++) {
+          html += '<li>> ' + movies[i] + '</li>';
+        }
+        ul.innerHTML = html;
+        count.textContent = movies.length + ' / 10 movies';
       }
     }
 
     function drawWheel() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      log('draw: ' + movies.length + ' movies');
+      log('draw: ' + movies.length);
 
       if (movies.length === 0) {
-        // Empty state
         document.querySelector('.wheel-hub').style.display = 'none';
         ctx.beginPath();
         ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
@@ -461,67 +466,50 @@
         ctx.strokeStyle = '#ff6b0066';
         ctx.lineWidth = 4;
         ctx.stroke();
-
-        ctx.fillStyle = '#ff6b0044';
+        ctx.fillStyle = '#ff6b0088';
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('Add movies to', CX, CY - 16);
-        ctx.fillText('spin the wheel!', CX, CY + 16);
+        ctx.fillText('Add movies to spin the wheel!', CX, CY);
         return;
       }
 
-      const slice = (Math.PI * 2) / movies.length;
+      var slice = (Math.PI * 2) / movies.length;
       document.querySelector('.wheel-hub').style.display = 'block';
 
-      // Solid background so canvas is never transparent
       ctx.beginPath();
       ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
       ctx.fillStyle = '#1a0015';
       ctx.fill();
 
-      movies.forEach((movie, i) => {
-        const startAngle = currentAngle + i * slice;
-        const endAngle = startAngle + slice;
+      for (var i = 0; i < movies.length; i++) {
+        var startAngle = currentAngle + i * slice;
+        var endAngle = startAngle + slice;
 
-        // Slice fill
         ctx.beginPath();
         ctx.moveTo(CX, CY);
         ctx.arc(CX, CY, RADIUS, startAngle, endAngle);
         ctx.closePath();
         ctx.fillStyle = COLORS[i % COLORS.length];
         ctx.fill();
-
-        // Slice border
-        ctx.strokeStyle = '#ff6b0066';
+        ctx.strokeStyle = '#ff6b00';
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Outer glow arc
-        ctx.beginPath();
-        ctx.arc(CX, CY, RADIUS, startAngle, endAngle);
-        ctx.strokeStyle = '#ff6b0033';
-        ctx.lineWidth = 8;
-        ctx.stroke();
-
-        // Label
         ctx.save();
         ctx.translate(CX, CY);
         ctx.rotate(startAngle + slice / 2);
-
-        const maxLen = 14;
-        const label = movie.length > maxLen ? movie.slice(0, maxLen - 1) + '…' : movie;
-        const textRadius = RADIUS * 0.62;
-
+        var maxLen = 14;
+        var label = movies[i].length > maxLen ? movies[i].slice(0, maxLen - 1) + '...' : movies[i];
+        var textRadius = RADIUS * 0.62;
         ctx.fillStyle = '#ffeecc';
-        ctx.font = `bold ${movies.length > 7 ? '13' : '15'}px Arial`;
+        ctx.font = 'bold ' + (movies.length > 7 ? '13' : '15') + 'px Arial';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         ctx.fillText(label, textRadius, 0);
         ctx.restore();
-      });
+      }
 
-      // Outer ring
       ctx.beginPath();
       ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
       ctx.strokeStyle = ACCENT;
@@ -531,12 +519,9 @@
 
     function getWinner() {
       if (movies.length === 0) return null;
-      // Pointer points right (angle 0). Normalize currentAngle.
-      const slice = (Math.PI * 2) / movies.length;
-      // The pointer is at angle 0 (right side of circle).
-      // We need to find which slice is at angle 0.
-      const normalized = ((- currentAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-      const index = Math.floor(normalized / slice) % movies.length;
+      var slice = (Math.PI * 2) / movies.length;
+      var normalized = ((-currentAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+      var index = Math.floor(normalized / slice) % movies.length;
       return movies[index];
     }
 
@@ -544,17 +529,13 @@
       if (isSpinning || movies.length < 2) return;
       isSpinning = true;
       stopIdleSpin();
-
-      // Random speed between 0.2 and 0.35 radians per frame
       spinVelocity = 0.22 + Math.random() * 0.13;
-      const friction = 0.988 + Math.random() * 0.006;
+      var friction = 0.988 + Math.random() * 0.006;
 
       function animate() {
         spinVelocity *= friction;
         currentAngle += spinVelocity;
-
         drawWheel();
-
         if (spinVelocity > 0.003) {
           animFrame = requestAnimationFrame(animate);
         } else {
@@ -563,12 +544,11 @@
           startIdleSpin();
         }
       }
-
       animFrame = requestAnimationFrame(animate);
     }
 
     function showResult() {
-      const winner = getWinner();
+      var winner = getWinner();
       if (!winner) return;
       document.getElementById('resultTitle').textContent = winner;
       document.getElementById('resultOverlay').classList.add('show');
@@ -578,20 +558,20 @@
       document.getElementById('resultOverlay').classList.remove('show');
     }
 
-    async function clearWheel() {
+    function clearWheel() {
       if (isSpinning) return;
-      await fetch('/api/movies', { method: 'DELETE' });
+      var xhr = new XMLHttpRequest();
+      xhr.open('DELETE', '/api/movies', true);
+      xhr.send();
     }
 
-    // Remote control key handling
-    const KEY_OK     = 13;  // OK / Enter
-    const KEY_BACK   = 461; // webOS Back
-    const KEY_ESCAPE = 27;
+    var KEY_OK     = 13;
+    var KEY_BACK   = 461;
+    var KEY_ESCAPE = 27;
 
-    document.addEventListener('keydown', (e) => {
-      const overlay = document.getElementById('resultOverlay');
-      const overlayVisible = overlay.classList.contains('show');
-
+    document.addEventListener('keydown', function(e) {
+      var overlay = document.getElementById('resultOverlay');
+      var overlayVisible = overlay.classList.contains('show');
       if (overlayVisible) {
         if (e.keyCode === KEY_BACK || e.keyCode === KEY_ESCAPE || e.keyCode === KEY_OK) {
           hideResult();
@@ -603,10 +583,10 @@
       }
     });
 
-    // Initial draw
     drawWheel();
     startIdleSpin();
-    } catch(e) { log('CRASH: ' + e.message + ' ' + e.stack); }
+    log('init done');
+    } catch(e) { log('CRASH: ' + e.message); }
   </script>
 </body>
 </html>
