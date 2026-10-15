@@ -12,7 +12,7 @@
     body {
       background: #0a0008;
       color: #ff6b00;
-      font-family: 'Oswald', sans-serif;
+      font-family: 'Oswald', Arial, sans-serif;
       height: 100vh;
       overflow: hidden;
       display: flex;
@@ -41,7 +41,7 @@
     }
 
     h1 {
-      font-family: 'Creepster', cursive;
+      font-family: 'Creepster', Georgia, serif;
       font-size: 3.5rem;
       color: #ff6b00;
       text-shadow: 0 0 20px #ff6b0088, 0 0 40px #ff6b0044;
@@ -150,7 +150,7 @@
     }
 
     .movie-list h3 {
-      font-family: 'Creepster', cursive;
+      font-family: 'Creepster', Georgia, serif;
       font-size: 1.4rem;
       color: #ff6b00;
       text-align: center;
@@ -194,7 +194,7 @@
       border: 1px solid #ff6b0055;
       border-radius: 8px;
       color: #ff6b0088;
-      font-family: 'Oswald', sans-serif;
+      font-family: 'Oswald', Arial, sans-serif;
       font-size: 0.85rem;
       letter-spacing: 1px;
       padding: 0.5rem;
@@ -230,7 +230,7 @@
     }
 
     .result-overlay h2 {
-      font-family: 'Creepster', cursive;
+      font-family: 'Creepster', Georgia, serif;
       font-size: 2.5rem;
       color: #ff9900;
       letter-spacing: 3px;
@@ -239,7 +239,7 @@
     }
 
     .result-title {
-      font-family: 'Creepster', cursive;
+      font-family: Georgia, serif;
       font-size: 5rem;
       color: #ff6b00;
       text-shadow: 0 0 40px #ff6b00, 0 0 80px #ff6b0066;
@@ -293,10 +293,10 @@
 <body>
 
   <!-- Bats -->
-  <div class="bat" style="top:10%; animation-duration:14s; animation-delay:0s;">🦇</div>
-  <div class="bat" style="top:25%; animation-duration:18s; animation-delay:5s;">🦇</div>
-  <div class="bat" style="top:60%; animation-duration:12s; animation-delay:2s;">🦇</div>
-  <div class="bat" style="top:80%; animation-duration:20s; animation-delay:9s;">🦇</div>
+  <div class="bat" style="top:10%; animation-duration:14s; animation-delay:0s;">~</div>
+  <div class="bat" style="top:25%; animation-duration:18s; animation-delay:5s;">~</div>
+  <div class="bat" style="top:60%; animation-duration:12s; animation-delay:2s;">~</div>
+  <div class="bat" style="top:80%; animation-duration:20s; animation-delay:9s;">~</div>
 
   <h1>Eve & Eoghan's Spooky Scary Slimefest</h1>
 
@@ -304,17 +304,17 @@
     <div class="sidebar">
       <div class="qr-box">
         <p>SCAN TO ADD A MOVIE</p>
-        <img id="qrImg" src="" alt="QR Code" width="180" height="180">
-        <div class="qr-url" id="qrUrl"></div>
+        <img id="qrImg" src="/qr.png" alt="QR Code" width="180" height="180">
+        <div class="qr-url">movie.eoghanmcgough.com/add</div>
       </div>
 
       <div class="movie-list">
-        <h3>⚰️ The Lineup ⚰️</h3>
+        <h3>-- The Lineup --</h3>
         <ul id="movieList">
           <li class="empty-msg">Waiting for submissions...</li>
         </ul>
         <div class="movie-count" id="movieCount"></div>
-        <button id="clearBtn" onclick="clearWheel()">🗑️ CLEAR WHEEL</button>
+        <button id="clearBtn" onclick="clearWheel()">CLEAR WHEEL</button>
       </div>
     </div>
 
@@ -329,7 +329,7 @@
 
   <!-- Result overlay -->
   <div class="result-overlay" id="resultOverlay">
-    <h2>🕸️ Tonight's Pick 🕸️</h2>
+    <h2>*** Tonight's Pick ***</h2>
     <div class="result-title" id="resultTitle"></div>
     <div class="result-hint">Press BACK or OK to continue</div>
   </div>
@@ -389,14 +389,6 @@
     };
     ws.onclose = () => setTimeout(() => location.reload(), 3000);
 
-    // QR code
-    fetch('/api/qr')
-      .then(r => r.json())
-      .then(d => {
-        document.getElementById('qrImg').src = d.dataUrl;
-        document.getElementById('qrUrl').textContent = d.url;
-      });
-
     function updateMovieList() {
       const ul = document.getElementById('movieList');
       const count = document.getElementById('movieCount');
@@ -404,7 +396,7 @@
         ul.innerHTML = '<li class="empty-msg">Waiting for submissions...</li>';
         count.textContent = '';
       } else {
-        ul.innerHTML = movies.map((m, i) => `<li>👻 ${m}</li>`).join('');
+        ul.innerHTML = movies.map((m, i) => `<li>> ${m}</li>`).join('');
         count.textContent = `${movies.length} / 10 movies`;
       }
     }
@@ -424,7 +416,7 @@
         ctx.stroke();
 
         ctx.fillStyle = '#ff6b0044';
-        ctx.font = 'bold 1.2rem Oswald';
+        ctx.font = 'bold 1.2rem Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('Add movies to', CX, CY - 16);
@@ -469,7 +461,7 @@
         const textRadius = RADIUS * 0.62;
 
         ctx.fillStyle = '#ffeecc';
-        ctx.font = `bold ${movies.length > 7 ? '13' : '15'}px Oswald`;
+        ctx.font = `bold ${movies.length > 7 ? '13' : '15'}px Arial`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         ctx.shadowColor = '#000';

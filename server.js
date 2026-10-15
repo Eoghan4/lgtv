@@ -3,8 +3,10 @@ const http = require('http');
 const WebSocket = require('ws');
 const QRCode = require('qrcode');
 const path = require('path');
+const fs = require('fs');
 
 const DOMAIN = 'movie.eoghanmcgough.com';
+const QR_PATH = path.join(__dirname, 'public', 'qr.png');
 
 const app = express();
 const server = http.createServer(app);
@@ -48,23 +50,15 @@ app.delete('/api/movies', (req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/qr', async (req, res) => {
-  const url = `https://${DOMAIN}/add`;
-  try {
-    const dataUrl = await QRCode.toDataURL(url, { width: 300, margin: 2 });
-    res.json({ dataUrl, url });
-  } catch (e) {
-    res.status(500).json({ error: 'QR generation failed' });
-  }
-});
-
 wss.on('connection', (ws) => {
   ws.send(JSON.stringify({ type: 'movies', movies }));
 });
 
 const PORT = 3000;
-server.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', async () => {
+  const addUrl = `https://${DOMAIN}/add`;
+  await QRCode.toFile(QR_PATH, addUrl, { width: 300, margin: 2 });
   console.log(`Server running at https://${DOMAIN}`);
   console.log(`TV app:    https://${DOMAIN}/`);
-  console.log(`Guest add: https://${DOMAIN}/add`);
+  console.log(`Guest add: ${addUrl}`);
 });
