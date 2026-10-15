@@ -338,18 +338,17 @@
   </div>
 
   <script>
+    const dbg = document.getElementById('debug');
+    function log(msg) { dbg.innerHTML = dbg.innerHTML.replace('LOADING...','') + msg + '<br>'; }
+
+    try {
     const canvas = document.getElementById('wheel');
+    log('canvas el: ' + (canvas ? 'ok' : 'MISSING'));
     const ctx = canvas.getContext('2d');
+    log('ctx: ' + (ctx ? 'ok' : 'FAILED'));
     const RADIUS = 240;
     const CX = canvas.width / 2;
     const CY = canvas.height / 2;
-
-    const dbg = document.getElementById('debug');
-    function log(msg) { dbg.innerHTML += msg + '<br>'; }
-
-    log('page loaded');
-    log('canvas: ' + canvas.width + 'x' + canvas.height);
-    log('ctx: ' + (ctx ? 'ok' : 'FAILED'));
 
     const COLORS = [
       '#8b0000', '#4a0066', '#1a5200', '#004444',
@@ -603,6 +602,7 @@
     // Initial draw
     drawWheel();
     startIdleSpin();
+    } catch(e) { log('CRASH: ' + e.message + ' ' + e.stack); }
   </script>
 </body>
 </html>
