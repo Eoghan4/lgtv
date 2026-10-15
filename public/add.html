@@ -157,6 +157,26 @@
       color: #ff6b0055;
       margin-top: 0.5rem;
     }
+
+    #clearBtn {
+      display: block;
+      width: 100%;
+      margin-top: 1rem;
+      background: transparent;
+      border: 1px solid #ff000055;
+      border-radius: 8px;
+      color: #ff000088;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+      padding: 0.6rem;
+      cursor: pointer;
+    }
+
+    #clearBtn:active {
+      border-color: #ff0000;
+      color: #ff0000;
+    }
   </style>
 </head>
 <body>
@@ -184,6 +204,7 @@
       <li class="empty-msg">No movies yet...</li>
     </ul>
     <div class="count" id="movieCount"></div>
+    <button id="clearBtn" onclick="clearWheel()">CLEAR WHEEL</button>
   </div>
 
   <script>
@@ -212,6 +233,11 @@
 
     function escapeHtml(str) {
       return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function clearWheel() {
+      if (!confirm('Clear all movies from the wheel?')) return;
+      fetch('/api/movies', { method: 'DELETE' });
     }
 
     function showMessage(text, type) {
