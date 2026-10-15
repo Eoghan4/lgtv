@@ -2,8 +2,9 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const QRCode = require('qrcode');
-const os = require('os');
 const path = require('path');
+
+const DOMAIN = 'movie.eoghanmcgough.com';
 
 const app = express();
 const server = http.createServer(app);
@@ -17,18 +18,6 @@ app.get('/add', (req, res) => {
 });
 
 let movies = [];
-
-function getLocalIP() {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        return iface.address;
-      }
-    }
-  }
-  return 'localhost';
-}
 
 function broadcast(data) {
   const msg = JSON.stringify(data);
@@ -60,8 +49,7 @@ app.delete('/api/movies', (req, res) => {
 });
 
 app.get('/api/qr', async (req, res) => {
-  const ip = getLocalIP();
-  const url = `http://${ip}:3000/add`;
+  const url = `https://${DOMAIN}/add`;
   try {
     const dataUrl = await QRCode.toDataURL(url, { width: 300, margin: 2 });
     res.json({ dataUrl, url });
@@ -76,8 +64,7 @@ wss.on('connection', (ws) => {
 
 const PORT = 3000;
 server.listen(PORT, '0.0.0.0', () => {
-  const ip = getLocalIP();
-  console.log(`Server running at http://${ip}:${PORT}`);
-  console.log(`TV app:    http://${ip}:${PORT}/`);
-  console.log(`Guest add: http://${ip}:${PORT}/add`);
+  console.log(`Server running at https://${DOMAIN}`);
+  console.log(`TV app:    https://${DOMAIN}/`);
+  console.log(`Guest add: https://${DOMAIN}/add`);
 });
