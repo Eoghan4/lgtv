@@ -1,0 +1,11 @@
+{
+  "id": "com.eoghanmcgough.moviewheel",
+  "version": "1.0.0",
+  "vendor": "Eoghan McGough",
+  "type": "web",
+  "main": "index.html",
+  "title": "Movie Wheel",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "iconColor": "#0a0008"
+}
