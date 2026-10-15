@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Halloween Movie Wheel</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Oswald:wght@400;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0008;
+      color: #ff6b00;
+      font-family: 'Oswald', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Stars background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, #fff8 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 50%, #fff6 0%, transparent 100%),
+        radial-gradient(1px 1px at 50% 10%, #fff8 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 80%, #fff5 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 30%, #fff8 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 85%, #fff6 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 60%, #fff7 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 70%, #fff6 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    h1 {
+      font-family: 'Creepster', cursive;
+      font-size: 3.5rem;
+      color: #ff6b00;
+      text-shadow: 0 0 20px #ff6b0088, 0 0 40px #ff6b0044;
+      letter-spacing: 4px;
+      margin-bottom: 1rem;
+      z-index: 1;
+      animation: flicker 4s infinite;
+    }
+
+    @keyframes flicker {
+      0%, 95%, 100% { opacity: 1; }
+      96% { opacity: 0.7; }
+      97% { opacity: 1; }
+      98% { opacity: 0.5; }
+      99% { opacity: 1; }
+    }
+
+    .main-layout {
+      display: flex;
+      align-items: center;
+      gap: 3rem;
+      z-index: 1;
+    }
+
+    /* Wheel container */
+    .wheel-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .wheel-pointer {
+      position: absolute;
+      right: -28px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 22px solid transparent;
+      border-bottom: 22px solid transparent;
+      border-right: 44px solid #ff6b00;
+      filter: drop-shadow(0 0 8px #ff6b00);
+      z-index: 10;
+    }
+
+    canvas {
+      border-radius: 50%;
+      box-shadow: 0 0 40px #ff6b0066, 0 0 80px #ff6b0022;
+    }
+
+    .wheel-hub {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: radial-gradient(circle, #ff6b00, #8b0000);
+      border-radius: 50%;
+      border: 3px solid #ff6b00;
+      box-shadow: 0 0 15px #ff6b00;
+      z-index: 5;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .qr-box {
+      background: #1a0015;
+      border: 2px solid #ff6b0066;
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 0 20px #ff6b0033;
+    }
+
+    .qr-box p {
+      font-size: 0.9rem;
+      color: #ff9944;
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+
+    .qr-box img {
+      border-radius: 8px;
+      display: block;
+    }
+
+    .qr-url {
+      font-size: 0.75rem;
+      color: #ff6b0088;
+      margin-top: 0.5rem;
+      letter-spacing: 0px;
+    }
+
+    .movie-list {
+      background: #1a0015;
+      border: 2px solid #ff6b0066;
+      border-radius: 12px;
+      padding: 1rem;
+      width: 240px;
+      box-shadow: 0 0 20px #ff6b0033;
+    }
+
+    .movie-list h3 {
+      font-family: 'Creepster', cursive;
+      font-size: 1.4rem;
+      color: #ff6b00;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      letter-spacing: 2px;
+    }
+
+    .movie-list ul {
+      list-style: none;
+      min-height: 40px;
+    }
+
+    .movie-list li {
+      color: #ffcc88;
+      font-size: 0.9rem;
+      padding: 3px 0;
+      border-bottom: 1px solid #ff6b0022;
+      letter-spacing: 0.5px;
+    }
+
+    .empty-msg {
+      color: #ff6b0055;
+      font-size: 0.85rem;
+      text-align: center;
+      font-style: italic;
+      padding: 0.5rem 0;
+    }
+
+    .movie-count {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #ff6b0066;
+      margin-top: 0.5rem;
+    }
+
+    #clearBtn {
+      display: block;
+      width: 100%;
+      margin-top: 0.75rem;
+      background: transparent;
+      border: 1px solid #ff6b0055;
+      border-radius: 8px;
+      color: #ff6b0088;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+
+    #clearBtn:hover, #clearBtn:focus {
+      border-color: #ff6b00;
+      color: #ff6b00;
+      box-shadow: 0 0 10px #ff6b0044;
+      outline: none;
+    }
+
+    /* Result overlay */
+    .result-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+
+    .result-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .result-overlay h2 {
+      font-family: 'Creepster', cursive;
+      font-size: 2.5rem;
+      color: #ff9900;
+      letter-spacing: 3px;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 30px #ff6b00;
+    }
+
+    .result-title {
+      font-family: 'Creepster', cursive;
+      font-size: 5rem;
+      color: #ff6b00;
+      text-shadow: 0 0 40px #ff6b00, 0 0 80px #ff6b0066;
+      text-align: center;
+      padding: 0 2rem;
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { text-shadow: 0 0 40px #ff6b00, 0 0 80px #ff6b0066; }
+      to   { text-shadow: 0 0 60px #ff6b00, 0 0 120px #ff6b00aa; }
+    }
+
+    .result-hint {
+      margin-top: 2rem;
+      font-size: 1rem;
+      color: #ff6b0077;
+      letter-spacing: 2px;
+    }
+
+    /* Bats */
+    .bat {
+      position: fixed;
+      font-size: 1.5rem;
+      animation: fly linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes fly {
+      from { transform: translateX(-80px) translateY(0px); }
+      25%  { transform: translateX(25vw)  translateY(-40px); }
+      50%  { transform: translateX(50vw)  translateY(20px); }
+      75%  { transform: translateX(75vw)  translateY(-20px); }
+      to   { transform: translateX(110vw) translateY(10px); }
+    }
+
+    /* Hint bar */
+    .hint-bar {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1rem;
+      color: #ff6b0077;
+      letter-spacing: 2px;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Bats -->
+  <div class="bat" style="top:10%; animation-duration:14s; animation-delay:0s;">🦇</div>
+  <div class="bat" style="top:25%; animation-duration:18s; animation-delay:5s;">🦇</div>
+  <div class="bat" style="top:60%; animation-duration:12s; animation-delay:2s;">🦇</div>
+  <div class="bat" style="top:80%; animation-duration:20s; animation-delay:9s;">🦇</div>
+
+  <h1>Eve & Eoghan's Spooky Scary Slimefest</h1>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="qr-box">
+        <p>SCAN TO ADD A MOVIE</p>
+        <img id="qrImg" src="" alt="QR Code" width="180" height="180">
+        <div class="qr-url" id="qrUrl"></div>
+      </div>
+
+      <div class="movie-list">
+        <h3>⚰️ The Lineup ⚰️</h3>
+        <ul id="movieList">
+          <li class="empty-msg">Waiting for submissions...</li>
+        </ul>
+        <div class="movie-count" id="movieCount"></div>
+        <button id="clearBtn" onclick="clearWheel()">🗑️ CLEAR WHEEL</button>
+      </div>
+    </div>
+
+    <div class="wheel-container">
+      <canvas id="wheel" width="500" height="500"></canvas>
+      <div class="wheel-hub"></div>
+      <div class="wheel-pointer"></div>
+    </div>
+  </div>
+
+  <div class="hint-bar">Press OK on remote to SPIN • Press BACK to dismiss result</div>
+
+  <!-- Result overlay -->
+  <div class="result-overlay" id="resultOverlay">
+    <h2>🕸️ Tonight's Pick 🕸️</h2>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-hint">Press BACK or OK to continue</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('wheel');
+    const ctx = canvas.getContext('2d');
+    const RADIUS = 240;
+    const CX = canvas.width / 2;
+    const CY = canvas.height / 2;
+
+    const COLORS = [
+      '#8b0000', '#4a0066', '#1a3300', '#003333',
+      '#660033', '#2d1b00', '#003366', '#330000',
+      '#1a0033', '#004400'
+    ];
+
+    const ACCENT = '#ff6b00';
+
+    let movies = [];
+    let currentAngle = 0;
+    let isSpinning = false;
+    let spinVelocity = 0;
+    let animFrame = null;
+    let idleFrame = null;
+
+    const IDLE_SPEED = 0.0008; // radians per frame — slow creep
+
+    function startIdleSpin() {
+      if (idleFrame) return;
+      function idleTick() {
+        if (!isSpinning) {
+          currentAngle += IDLE_SPEED;
+          drawWheel();
+        }
+        idleFrame = requestAnimationFrame(idleTick);
+      }
+      idleFrame = requestAnimationFrame(idleTick);
+    }
+
+    function stopIdleSpin() {
+      if (idleFrame) {
+        cancelAnimationFrame(idleFrame);
+        idleFrame = null;
+      }
+    }
+
+    // WebSocket
+    const ws = new WebSocket(`ws://${location.host}`);
+    ws.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      if (data.type === 'movies') {
+        movies = data.movies;
+        updateMovieList();
+        if (!isSpinning) drawWheel();
+      }
+    };
+    ws.onclose = () => setTimeout(() => location.reload(), 3000);
+
+    // QR code
+    fetch('/api/qr')
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('qrImg').src = d.dataUrl;
+        document.getElementById('qrUrl').textContent = d.url;
+      });
+
+    function updateMovieList() {
+      const ul = document.getElementById('movieList');
+      const count = document.getElementById('movieCount');
+      if (movies.length === 0) {
+        ul.innerHTML = '<li class="empty-msg">Waiting for submissions...</li>';
+        count.textContent = '';
+      } else {
+        ul.innerHTML = movies.map((m, i) => `<li>👻 ${m}</li>`).join('');
+        count.textContent = `${movies.length} / 10 movies`;
+      }
+    }
+
+    function drawWheel() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (movies.length === 0) {
+        // Empty state
+        ctx.beginPath();
+        ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
+        ctx.fillStyle = '#1a0015';
+        ctx.fill();
+        ctx.strokeStyle = '#ff6b0066';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ff6b0044';
+        ctx.font = 'bold 1.2rem Oswald';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Add movies to', CX, CY - 16);
+        ctx.fillText('spin the wheel!', CX, CY + 16);
+        return;
+      }
+
+      const slice = (Math.PI * 2) / movies.length;
+
+      movies.forEach((movie, i) => {
+        const startAngle = currentAngle + i * slice;
+        const endAngle = startAngle + slice;
+
+        // Slice fill
+        ctx.beginPath();
+        ctx.moveTo(CX, CY);
+        ctx.arc(CX, CY, RADIUS, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = COLORS[i % COLORS.length];
+        ctx.fill();
+
+        // Slice border
+        ctx.strokeStyle = '#ff6b0066';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Outer glow arc
+        ctx.beginPath();
+        ctx.arc(CX, CY, RADIUS, startAngle, endAngle);
+        ctx.strokeStyle = '#ff6b0033';
+        ctx.lineWidth = 8;
+        ctx.stroke();
+
+        // Label
+        ctx.save();
+        ctx.translate(CX, CY);
+        ctx.rotate(startAngle + slice / 2);
+
+        const maxLen = 14;
+        const label = movie.length > maxLen ? movie.slice(0, maxLen - 1) + '…' : movie;
+        const textRadius = RADIUS * 0.62;
+
+        ctx.fillStyle = '#ffeecc';
+        ctx.font = `bold ${movies.length > 7 ? '13' : '15'}px Oswald`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 4;
+        ctx.fillText(label, textRadius, 0);
+        ctx.restore();
+      });
+
+      // Outer ring
+      ctx.beginPath();
+      ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
+      ctx.strokeStyle = ACCENT;
+      ctx.lineWidth = 5;
+      ctx.shadowColor = ACCENT;
+      ctx.shadowBlur = 15;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    function getWinner() {
+      if (movies.length === 0) return null;
+      // Pointer points right (angle 0). Normalize currentAngle.
+      const slice = (Math.PI * 2) / movies.length;
+      // The pointer is at angle 0 (right side of circle).
+      // We need to find which slice is at angle 0.
+      const normalized = ((- currentAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+      const index = Math.floor(normalized / slice) % movies.length;
+      return movies[index];
+    }
+
+    function spin() {
+      if (isSpinning || movies.length < 2) return;
+      isSpinning = true;
+      stopIdleSpin();
+
+      // Random speed between 0.2 and 0.35 radians per frame
+      spinVelocity = 0.22 + Math.random() * 0.13;
+      const friction = 0.988 + Math.random() * 0.006;
+
+      function animate() {
+        spinVelocity *= friction;
+        currentAngle += spinVelocity;
+
+        drawWheel();
+
+        if (spinVelocity > 0.003) {
+          animFrame = requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          showResult();
+          startIdleSpin();
+        }
+      }
+
+      animFrame = requestAnimationFrame(animate);
+    }
+
+    function showResult() {
+      const winner = getWinner();
+      if (!winner) return;
+      document.getElementById('resultTitle').textContent = winner;
+      document.getElementById('resultOverlay').classList.add('show');
+    }
+
+    function hideResult() {
+      document.getElementById('resultOverlay').classList.remove('show');
+    }
+
+    async function clearWheel() {
+      if (isSpinning) return;
+      await fetch('/api/movies', { method: 'DELETE' });
+    }
+
+    // Remote control key handling
+    const KEY_OK     = 13;  // OK / Enter
+    const KEY_BACK   = 461; // webOS Back
+    const KEY_ESCAPE = 27;
+
+    document.addEventListener('keydown', (e) => {
+      const overlay = document.getElementById('resultOverlay');
+      const overlayVisible = overlay.classList.contains('show');
+
+      if (overlayVisible) {
+        if (e.keyCode === KEY_BACK || e.keyCode === KEY_ESCAPE || e.keyCode === KEY_OK) {
+          hideResult();
+        }
+      } else {
+        if (e.keyCode === KEY_OK || e.keyCode === 32) {
+          spin();
+        }
+      }
+    });
+
+    // Initial draw
+    drawWheel();
+    startIdleSpin();
+  </script>
+</body>
+</html>
