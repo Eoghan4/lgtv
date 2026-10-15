@@ -328,7 +328,7 @@
     </div>
   </div>
 
-  <div class="hint-bar">Press OK on remote to SPIN • Press BACK to dismiss result</div>
+  <div id="debug" style="position:fixed;top:0;left:0;background:rgba(0,0,0,0.8);color:#0f0;font-size:12px;padding:8px;z-index:999;max-width:400px;word-break:break-all;"></div>
 
   <!-- Result overlay -->
   <div class="result-overlay" id="resultOverlay">
@@ -343,6 +343,13 @@
     const RADIUS = 240;
     const CX = canvas.width / 2;
     const CY = canvas.height / 2;
+
+    const dbg = document.getElementById('debug');
+    function log(msg) { dbg.innerHTML += msg + '<br>'; }
+
+    log('page loaded');
+    log('canvas: ' + canvas.width + 'x' + canvas.height);
+    log('ctx: ' + (ctx ? 'ok' : 'FAILED'));
 
     const COLORS = [
       '#8b0000', '#4a0066', '#1a5200', '#004444',
@@ -384,10 +391,12 @@
     let wsConnected = false;
 
     function connectWS() {
+      log('connecting WS...');
       const ws = new WebSocket(`wss://${location.host}`);
-      ws.onopen = () => { wsConnected = true; };
+      ws.onopen = () => { wsConnected = true; log('WS open'); };
       ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
+        log('WS msg: ' + data.type + ' movies:' + (data.movies||[]).length);
         if (data.type === 'movies') {
           movies = data.movies;
           updateMovieList();
@@ -396,10 +405,12 @@
       };
       ws.onclose = () => {
         wsConnected = false;
+        log('WS closed, retrying...');
         setTimeout(connectWS, 3000);
       };
       ws.onerror = () => {
         wsConnected = false;
+        log('WS error');
       };
     }
 
@@ -413,11 +424,12 @@
         const data = await res.json();
         if (data.length !== lastMovieCount) {
           lastMovieCount = data.length;
+          log('poll: ' + data.length + ' movies');
           movies = data;
           updateMovieList();
           if (!isSpinning) drawWheel();
         }
-      } catch(e) {}
+      } catch(e) { log('poll err: ' + e); }
     }, 2000);
 
     function updateMovieList() {
@@ -434,6 +446,7 @@
 
     function drawWheel() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      log('draw: ' + movies.length + ' movies');
 
       if (movies.length === 0) {
         // Empty state
