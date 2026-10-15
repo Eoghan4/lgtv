@@ -95,6 +95,9 @@
 
     .wheel-hub {
       position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
       width: 40px;
       height: 40px;
       background: radial-gradient(circle, #ff6b00, #8b0000);
@@ -377,17 +380,45 @@
       }
     }
 
-    // WebSocket
-    const ws = new WebSocket(`wss://${location.host}`);
-    ws.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      if (data.type === 'movies') {
-        movies = data.movies;
-        updateMovieList();
-        if (!isSpinning) drawWheel();
-      }
-    };
-    ws.onclose = () => setTimeout(() => location.reload(), 3000);
+    // WebSocket with polling fallback
+    let wsConnected = false;
+
+    function connectWS() {
+      const ws = new WebSocket(`wss://${location.host}`);
+      ws.onopen = () => { wsConnected = true; };
+      ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        if (data.type === 'movies') {
+          movies = data.movies;
+          updateMovieList();
+          if (!isSpinning) drawWheel();
+        }
+      };
+      ws.onclose = () => {
+        wsConnected = false;
+        setTimeout(connectWS, 3000);
+      };
+      ws.onerror = () => {
+        wsConnected = false;
+      };
+    }
+
+    connectWS();
+
+    // Polling fallback — kicks in if WS never connects
+    let lastMovieCount = -1;
+    setInterval(async () => {
+      try {
+        const res = await fetch('/api/movies');
+        const data = await res.json();
+        if (data.length !== lastMovieCount) {
+          lastMovieCount = data.length;
+          movies = data;
+          updateMovieList();
+          if (!isSpinning) drawWheel();
+        }
+      } catch(e) {}
+    }, 2000);
 
     function updateMovieList() {
       const ul = document.getElementById('movieList');
