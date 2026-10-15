@@ -13,6 +13,10 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 app.use(express.json());
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/add', (req, res) => {
