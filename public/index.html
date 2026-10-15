@@ -345,9 +345,9 @@
     const CY = canvas.height / 2;
 
     const COLORS = [
-      '#8b0000', '#4a0066', '#1a3300', '#003333',
-      '#660033', '#2d1b00', '#003366', '#330000',
-      '#1a0033', '#004400'
+      '#8b0000', '#4a0066', '#1a5200', '#004444',
+      '#880033', '#5c3a00', '#003388', '#550000',
+      '#330055', '#005500'
     ];
 
     const ACCENT = '#ff6b00';
@@ -447,7 +447,7 @@
         ctx.stroke();
 
         ctx.fillStyle = '#ff6b0044';
-        ctx.font = 'bold 1.2rem Arial';
+        ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('Add movies to', CX, CY - 16);
@@ -457,6 +457,12 @@
 
       const slice = (Math.PI * 2) / movies.length;
       document.querySelector('.wheel-hub').style.display = 'block';
+
+      // Solid background so canvas is never transparent
+      ctx.beginPath();
+      ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
+      ctx.fillStyle = '#1a0015';
+      ctx.fill();
 
       movies.forEach((movie, i) => {
         const startAngle = currentAngle + i * slice;
@@ -495,8 +501,6 @@
         ctx.font = `bold ${movies.length > 7 ? '13' : '15'}px Arial`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
-        ctx.shadowColor = '#000';
-        ctx.shadowBlur = 4;
         ctx.fillText(label, textRadius, 0);
         ctx.restore();
       });
@@ -506,10 +510,7 @@
       ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
       ctx.strokeStyle = ACCENT;
       ctx.lineWidth = 5;
-      ctx.shadowColor = ACCENT;
-      ctx.shadowBlur = 15;
       ctx.stroke();
-      ctx.shadowBlur = 0;
     }
 
     function getWinner() {
