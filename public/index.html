@@ -331,8 +331,7 @@
     </div>
   </div>
 
-  <div id="debug" style="position:fixed;top:0;left:0;right:0;background:red;color:white;font-size:20px;padding:16px;z-index:99999;">LOADING...</div>
-  <script>document.getElementById('debug').innerHTML = 'JS WORKS';</script>
+  <div class="hint-bar">Press OK on remote to SPIN • Press BACK to dismiss result</div>
 
   <!-- Result overlay -->
   <div class="result-overlay" id="resultOverlay">
@@ -342,14 +341,8 @@
   </div>
 
   <script>
-    var dbg = document.getElementById('debug');
-    function log(msg) { dbg.innerHTML = dbg.innerHTML.replace('LOADING...','') + msg + '<br>'; }
-
-    try {
     var canvas = document.getElementById('wheel');
-    log('canvas: ' + (canvas ? 'ok' : 'MISSING'));
     var ctx = canvas.getContext('2d');
-    log('ctx: ' + (ctx ? 'ok' : 'FAILED'));
     var RADIUS = 240;
     var CX = canvas.width / 2;
     var CY = canvas.height / 2;
@@ -391,12 +384,10 @@
     }
 
     function connectWS() {
-      log('connecting WS...');
       var ws = new WebSocket('wss://' + location.host);
-      ws.onopen = function() { wsConnected = true; log('WS open'); };
+      ws.onopen = function() { wsConnected = true; };
       ws.onmessage = function(e) {
         var data = JSON.parse(e.data);
-        log('WS msg: ' + data.type + ' n:' + (data.movies || []).length);
         if (data.type === 'movies') {
           movies = data.movies;
           updateMovieList();
@@ -405,13 +396,9 @@
       };
       ws.onclose = function() {
         wsConnected = false;
-        log('WS closed, retrying...');
         setTimeout(connectWS, 3000);
       };
-      ws.onerror = function() {
-        wsConnected = false;
-        log('WS error');
-      };
+      ws.onerror = function() { wsConnected = false; };
     }
 
     connectWS();
@@ -425,15 +412,14 @@
             var data = JSON.parse(xhr.responseText);
             if (data.length !== lastMovieCount) {
               lastMovieCount = data.length;
-              log('poll: ' + data.length + ' movies');
               movies = data;
               updateMovieList();
               if (!isSpinning) drawWheel();
             }
-          } catch(e) { log('poll parse err: ' + e); }
+          } catch(e) {}
         }
       };
-      xhr.onerror = function() { log('poll xhr err'); };
+      xhr.onerror = function() {};
       xhr.send();
     }, 2000);
 
@@ -455,7 +441,6 @@
 
     function drawWheel() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      log('draw: ' + movies.length);
 
       if (movies.length === 0) {
         document.querySelector('.wheel-hub').style.display = 'none';
@@ -585,8 +570,7 @@
 
     drawWheel();
     startIdleSpin();
-    log('init done');
-    } catch(e) { log('CRASH: ' + e.message); }
+  </script>
   </script>
 </body>
 </html>
