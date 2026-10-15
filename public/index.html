@@ -414,6 +414,7 @@
 
       if (movies.length === 0) {
         // Empty state
+        document.querySelector('.wheel-hub').style.display = 'none';
         ctx.beginPath();
         ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
         ctx.fillStyle = '#1a0015';
@@ -432,6 +433,7 @@
       }
 
       const slice = (Math.PI * 2) / movies.length;
+      document.querySelector('.wheel-hub').style.display = 'block';
 
       movies.forEach((movie, i) => {
         const startAngle = currentAngle + i * slice;
